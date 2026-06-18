@@ -6,17 +6,28 @@ import numpy as np
 import logging
 from datetime import datetime
 import json
+import gdown
 from flask_cors import CORS
 from PIL import Image
+from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 CORS(app)  # Add this line to enable CORS
 
 
+
+MODEL_PATH = "banana_Leaf_disease_model.h5"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model...")
+    url = "https://drive.google.com/file/d/1EBRk7RIuNxLGzUi54JMS1c5_-YshYvEu/view?usp=sharing"
+    gdown.download(url, MODEL_PATH, quiet=False)
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
+model = load_model(MODEL_PATH)
 # Initialize Flask app
 app = Flask(__name__, 
            template_folder='templates', 
