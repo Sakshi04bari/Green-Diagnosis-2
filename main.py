@@ -11,8 +11,7 @@ from flask_cors import CORS
 from PIL import Image
 from tensorflow.keras.models import load_model
 
-app = Flask(__name__)
-CORS(app)  # Add this line to enable CORS
+
 
 
 
@@ -20,7 +19,7 @@ MODEL_PATH = "banana_Leaf_disease_model.h5"
 
 if not os.path.exists(MODEL_PATH):
     print("Downloading model...")
-    url = "https://drive.google.com/file/d/1EBRk7RIuNxLGzUi54JMS1c5_-YshYvEu/view?usp=sharing"
+    url = "https://drive.google.com/uc?id=1EBRk7RIuNxLGzUi54JMS1c5_-YshYvEu"
     gdown.download(url, MODEL_PATH, quiet=False)
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -29,9 +28,13 @@ logger = logging.getLogger(__name__)
 
 model = load_model(MODEL_PATH)
 # Initialize Flask app
-app = Flask(__name__, 
-           template_folder='templates', 
-           static_folder='static')
+app = Flask(
+    __name__,
+    template_folder="templates",
+    static_folder="static"
+)
+
+CORS(app)
 
 # Enable CORS for all routes
 CORS(app, origins=[
@@ -48,23 +51,20 @@ CORS(app, origins=[
 model = None
 model_loaded = False
 
-# Try to import TensorFlow and load model
 try:
-    from tensorflow.keras.models import load_model
-    from tensorflow.keras.preprocessing import image
-    
-    model_path = 'banana_Leaf_disease_model.h5'
-    if os.path.exists(model_path):
-        model = load_model(model_path)
-        model_loaded = True
-        logger.info(f"✅ Model loaded successfully from {model_path}")
-    else:
-        logger.error(f"❌ Model file not found: {model_path}")
-        logger.info("💡 Make sure 'banana_Leaf_disease_model.h5' is in the same directory as this script")
-        
-except ImportError as e:
-    logger.error(f"❌ TensorFlow import error: {e}")
-    logger.info("💡 Install TensorFlow: pip install tensorflow")
+    if not os.path.exists(MODEL_PATH):
+        print("Downloading model from Google Drive...")
+        gdown.download(
+            id="1EBRk7RIuNxLGzUi54JMS1c5_-YshYvEu",
+            output=MODEL_PATH,
+            quiet=False
+        )
+
+    model = load_model(MODEL_PATH)
+    model_loaded = True
+
+    logger.info("✅ Model loaded successfully")
+
 except Exception as e:
     logger.error(f"❌ Error loading model: {e}")
 
@@ -323,8 +323,10 @@ if __name__ == '__main__':
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
     
     # Run the Flask app
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False
-    )
+    port = int(os.environ.get("PORT", 5000))
+
+app.run(
+    host="0.0.0.0",
+    port=port,
+    debug=False
+)

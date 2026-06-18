@@ -222,13 +222,25 @@ async function testConnection() {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-    const API_URL = "https://green-diagnosis.onrender.com";
+    const API_URL = window.location.origin;
 
-    const response = await fetch(`${API_URL}/`, {
-      method: "GET",
-      mode: "cors",
-      signal: controller.signal,
-    });
+const response = await fetch(`${API_URL}/health`, {
+  method: "GET",
+  signal: controller.signal,
+});
+
+if (response.ok) {
+  const data = await response.json();
+
+  if (data.model_loaded) {
+    setConnectionStatus("connected");
+  } else {
+    showError(
+      "Backend is running but AI model is not loaded."
+    );
+    setConnectionStatus("disconnected");
+  }
+}
 
     clearTimeout(timeoutId)
 
@@ -277,7 +289,26 @@ async function handlePredict() {
   formData.append("image", selectedFile)
 
   try {
-    const backendUrls = ["http://localhost:5000/predict", "http://127.0.0.1:5000/predict"]
+    const API_URL = window.location.origin;
+
+const response = await fetch(`${API_URL}/predict`, {
+    method: "POST",
+    body: formData
+});
+
+if (!response.ok) {
+    const err = await response.json();
+
+    throw new Error(
+        err.error || "Prediction failed"
+    );
+}
+
+const data = await response.json();
+
+showResults(data);
+
+setConnectionStatus("connected");
 
     let response
     let lastError
@@ -590,10 +621,7 @@ function addButtonLoading(button, originalText) {
     button.innerHTML = originalText
   }
 }
-fetch('http://127.0.0.1:5000/predict', {
-    method: 'POST',
-    body: formData
-})
+
 
 // Handle window resize
 window.addEventListener("resize", () => {
