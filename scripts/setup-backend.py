@@ -1,0 +1,32 @@
+"""
+Setup script to help users configure the Flask backend connection.
+This script provides instructions for running the Flask backend.
+"""
+
+print("=== GREEN Diagnosis Backend Setup ===")
+print()
+print("To connect this Next.js frontend to your Flask backend:")
+print()
+print("1. Make sure your Flask app (main.py) is running:")
+print("   python main.py")
+print()
+print("2. The Flask app should be running on http://localhost:5000")
+print()
+print("3. Update the API endpoint in app/detection/page.tsx if needed:")
+print("   const response = await fetch('http://localhost:5000/predict', {")
+print()
+print("4. For production deployment, update the API URL to your deployed Flask backend")
+print()
+print("5. Make sure CORS is enabled in your Flask app if running on different domains:")
+print("   from flask_cors import CORS")
+print("   CORS(app)")
+print()
+print("Backend Requirements:")
+print("- Flask")
+print("- TensorFlow/Keras")
+print("- OpenCV")
+print("- NumPy")
+print("- Your trained model file: banana_Leaf_disease_model.h5")
+print()
+print("The frontend will automatically save detection history to localStorage")
+print("and display results in the History page.")
