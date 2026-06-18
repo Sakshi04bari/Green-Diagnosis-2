@@ -9,10 +9,8 @@ import json
 import gdown
 from flask_cors import CORS
 from PIL import Image
+from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
-
-
-
 
 
 MODEL_PATH = "banana_Leaf_disease_model.h5"
