@@ -312,5 +312,8 @@ if __name__ == '__main__':
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
     
     # Run the Flask app
-    if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False
+    )
