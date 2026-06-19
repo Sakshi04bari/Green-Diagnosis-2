@@ -230,7 +230,12 @@ const response = await fetch(`${API_URL}/health`, {
 });
 
 if (response.ok) {
-  const data = await response.json();
+  const text = await response.text()
+
+  console.log("SERVER RESPONSE:")
+  console.log(text)
+
+  const data = JSON.parse(text)
 
   if (data.model_loaded) {
     setConnectionStatus("connected");
