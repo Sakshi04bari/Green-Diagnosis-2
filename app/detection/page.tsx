@@ -247,7 +247,7 @@ export default function DetectionPage() {
               <Button
                 onClick={handlePredict}
                 disabled={!selectedFile || isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-lg"
               >
                 {isLoading ? (
                   <>
