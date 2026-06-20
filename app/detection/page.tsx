@@ -19,6 +19,28 @@ interface DetectionResult {
   prevention: string
 }
 
+// Mock disease data for demo mode
+const MOCK_PREDICTIONS = [
+  {
+    disease: "Healthy",
+    confidence: "94%",
+    causes: "Plant appears healthy with no visible disease symptoms",
+    prevention: "Continue good plant care practices, regular monitoring, proper watering, adequate nutrition, preventive treatments",
+  },
+  {
+    disease: "Sigatoka",
+    confidence: "87%",
+    causes: "High humidity, poor plant hygiene, dense planting, inadequate drainage, fungal spores spread by wind and rain",
+    prevention: "Improve drainage systems, increase plant spacing, apply fungicide treatments, remove infected leaves immediately, maintain proper plant nutrition",
+  },
+  {
+    disease: "Xanthomonas",
+    confidence: "91%",
+    causes: "Bacterial infection, warm humid weather, plant wounds, contaminated tools, infected seeds or planting materials",
+    prevention: "Use disease-free seeds, sanitize tools between plants, apply copper-based bactericides, improve plant nutrition, avoid working with wet plants",
+  },
+]
+
 export default function DetectionPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -26,6 +48,7 @@ export default function DetectionPage() {
   const [result, setResult] = useState<DetectionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<"unknown" | "connected" | "disconnected">("unknown")
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const allowedImageTypes = ["image/jpeg", "image/png", "image/bmp", "image/gif"]
 
   const isValidImageFile = (file: File) => allowedImageTypes.includes(file.type)
@@ -60,49 +83,64 @@ export default function DetectionPage() {
     formData.append("image", selectedFile)
 
     try {
-      // Try multiple backend URLs in case of different configurations
       const controller = new AbortController()
-const timeoutId = setTimeout(() => controller.abort(), 30000)
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
-const response = await fetch(
-  "https://green-diagnosis.onrender.com/predict",
-  {
-    method: "POST",
-    body: formData,
-    mode: "cors",
-    signal: controller.signal,
-  }
-)
+      try {
+        const response = await fetch(
+          "https://green-diagnosis-2-3.onrender.com/predict",
+          {
+            method: "POST",
+            body: formData,
+            mode: "cors",
+            signal: controller.signal,
+          }
+        )
 
-clearTimeout(timeoutId)
+        clearTimeout(timeoutId)
 
-if (!response.ok) {
-  const errorText = await response.text()
-  throw new Error(errorText || "Prediction failed")
-}
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(errorText || "Prediction failed")
+        }
 
-setConnectionStatus("connected")
+        setConnectionStatus("connected")
+        setIsDemoMode(false)
 
-const data: DetectionResult = await response.json()
-setResult(data)
+        const data: DetectionResult = await response.json()
+        setResult(data)
 
-      // Save to history
-      const historyItem = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        filename: selectedFile.name,
-        result: data,
+        // Save to history
+        const historyItem = {
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          filename: selectedFile.name,
+          result: data,
+        }
+
+        const existingHistory = JSON.parse(localStorage.getItem("detectionHistory") || "[]")
+        existingHistory.unshift(historyItem)
+        localStorage.setItem("detectionHistory", JSON.stringify(existingHistory.slice(0, 50)))
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        
+        // Check if error is due to abort/timeout
+        if (fetchErr instanceof Error && fetchErr.name === "AbortError") {
+          throw new Error("Connection timeout. The backend server is not responding.")
+        }
+        
+        throw fetchErr
       }
-
-      const existingHistory = JSON.parse(localStorage.getItem("detectionHistory") || "[]")
-      existingHistory.unshift(historyItem)
-      localStorage.setItem("detectionHistory", JSON.stringify(existingHistory.slice(0, 50)))
     } catch (err) {
       console.error("Prediction error:", err)
+      setConnectionStatus("disconnected")
+      
+      // Use demo mode as fallback
+      const randomPrediction = MOCK_PREDICTIONS[Math.floor(Math.random() * MOCK_PREDICTIONS.length)]
+      setResult(randomPrediction)
+      setIsDemoMode(true)
       setError(
-        err instanceof Error
-          ? err.message
-          :"Failed to connect to the deployed backend server.",
+        "Backend server is offline. Showing demo prediction. Deploy the backend service to enable real predictions.",
       )
     } finally {
       setIsLoading(false)
@@ -121,15 +159,19 @@ setResult(data)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
-      const response = await fetch("https://green-diagnosis.onrender.com/health",
-   {
-        method: "GET",
-        mode: "cors",
-        signal: controller.signal,
-      })
+      try {
+        const response = await fetch("https://green-diagnosis-2-3.onrender.com/health", {
+          method: "GET",
+          mode: "cors",
+          signal: controller.signal,
+        })
 
-      clearTimeout(timeoutId)
-      setConnectionStatus(response.ok ? "connected" : "disconnected")
+        clearTimeout(timeoutId)
+        setConnectionStatus(response.ok ? "connected" : "disconnected")
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        throw fetchErr
+      }
     } catch (err) {
       console.log("Connection test failed:", err)
       setConnectionStatus("disconnected")
@@ -205,7 +247,7 @@ setResult(data)
               <Button
                 onClick={handlePredict}
                 disabled={!selectedFile || isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-lg"
               >
                 {isLoading ? (
                   <>
@@ -245,7 +287,12 @@ setResult(data)
           <CardContent>
             {result ? (
               <div className="space-y-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-center p-4 bg-green-50 rounded-lg relative">
+                  {isDemoMode && (
+                    <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
+                      Demo Mode
+                    </div>
+                  )}
                   <h3 className="text-lg font-semibold text-green-800 mb-2">Disease Detected</h3>
                   <p className="text-2xl font-bold text-green-600">{result.disease}</p>
                   <p className="text-sm text-gray-600 mt-1">Confidence: {result.confidence}</p>
@@ -304,6 +351,31 @@ setResult(data)
               <p className="text-gray-600">Focus on one leaf for better accuracy</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Backend Setup Card */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="text-blue-900">Backend Configuration</CardTitle>
+          <CardDescription className="text-blue-800">Deploy the Flask backend for real predictions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-blue-900">
+          <p>
+            The app currently runs in <strong>Demo Mode</strong> when the backend server is offline. To enable real AI disease predictions:
+          </p>
+          <ol className="space-y-2 ml-4 list-decimal">
+            <li>Deploy the Flask backend to Render, Railway, Heroku, or another service</li>
+            <li>Update the API endpoint URL in the detection page code</li>
+            <li>Ensure the backend has the trained TensorFlow model downloaded</li>
+            <li>Configure CORS to accept requests from your frontend domain</li>
+          </ol>
+          <p className="text-xs mt-4 p-2 bg-white rounded border border-blue-200">
+            <strong>Current Backend:</strong> https://green-diagnosis-2-3.onrender.com
+          </p>
+          <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 hover:bg-blue-100">
+            View Backend Code
+          </Button>
         </CardContent>
       </Card>
     </div>

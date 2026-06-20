@@ -21,19 +21,19 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <Leaf className="h-8 w-8 text-green-600" />
-            <span className="text-xl font-bold text-green-800">
+            <span className="text-lg font-bold">
               GREEN <span className="text-green-600">Diagnosis</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             {navigation.map((item) => {
               const Icon = item.icon
               return (
@@ -41,10 +41,10 @@ export function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap",
                     pathname === item.href
                       ? "bg-green-100 text-green-700"
-                      : "text-gray-600 hover:text-green-600 hover:bg-green-50",
+                      : "text-gray-600 hover:text-green-600",
                   )}
                 >
                   <Icon className="h-4 w-4" />

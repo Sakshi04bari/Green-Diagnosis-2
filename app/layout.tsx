@@ -19,10 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+      <body className={`${inter.className} bg-gray-50`}>
+        <div className="min-h-screen flex flex-col">
           <Navigation />
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">{children}</main>
         </div>
       </body>
     </html>
