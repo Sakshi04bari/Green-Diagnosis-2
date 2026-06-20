@@ -42,10 +42,10 @@ Once backend is deployed, update the API endpoint in `app/detection/page.tsx`:
 
 Replace:
 ```typescript
-"https://green-diagnosis.onrender.com/predict"
+"https://green-diagnosis-2-3.onrender.com/predict"
 ```
 
-With your new Render URL:
+With your new Render URL (if you deploy a different backend instance):
 ```typescript
 "https://your-app-name.onrender.com/predict"
 ```

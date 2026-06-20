@@ -88,7 +88,7 @@ export default function DetectionPage() {
 
       try {
         const response = await fetch(
-          "https://green-diagnosis.onrender.com/predict",
+          "https://green-diagnosis-2-3.onrender.com/predict",
           {
             method: "POST",
             body: formData,
@@ -160,7 +160,7 @@ export default function DetectionPage() {
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
       try {
-        const response = await fetch("https://green-diagnosis.onrender.com/health", {
+        const response = await fetch("https://green-diagnosis-2-3.onrender.com/health", {
           method: "GET",
           mode: "cors",
           signal: controller.signal,
@@ -371,7 +371,7 @@ export default function DetectionPage() {
             <li>Configure CORS to accept requests from your frontend domain</li>
           </ol>
           <p className="text-xs mt-4 p-2 bg-white rounded border border-blue-200">
-            <strong>Current Backend:</strong> https://green-diagnosis.onrender.com (Offline)
+            <strong>Current Backend:</strong> https://green-diagnosis-2-3.onrender.com
           </p>
           <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 hover:bg-blue-100">
             View Backend Code
