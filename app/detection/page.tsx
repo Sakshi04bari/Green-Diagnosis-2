@@ -60,49 +60,60 @@ export default function DetectionPage() {
     formData.append("image", selectedFile)
 
     try {
-      // Try multiple backend URLs in case of different configurations
       const controller = new AbortController()
-const timeoutId = setTimeout(() => controller.abort(), 30000)
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
-const response = await fetch(
-  "https://green-diagnosis.onrender.com/predict",
-  {
-    method: "POST",
-    body: formData,
-    mode: "cors",
-    signal: controller.signal,
-  }
-)
+      try {
+        const response = await fetch(
+          "https://green-diagnosis.onrender.com/predict",
+          {
+            method: "POST",
+            body: formData,
+            mode: "cors",
+            signal: controller.signal,
+          }
+        )
 
-clearTimeout(timeoutId)
+        clearTimeout(timeoutId)
 
-if (!response.ok) {
-  const errorText = await response.text()
-  throw new Error(errorText || "Prediction failed")
-}
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(errorText || "Prediction failed")
+        }
 
-setConnectionStatus("connected")
+        setConnectionStatus("connected")
 
-const data: DetectionResult = await response.json()
-setResult(data)
+        const data: DetectionResult = await response.json()
+        setResult(data)
 
-      // Save to history
-      const historyItem = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        filename: selectedFile.name,
-        result: data,
+        // Save to history
+        const historyItem = {
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          filename: selectedFile.name,
+          result: data,
+        }
+
+        const existingHistory = JSON.parse(localStorage.getItem("detectionHistory") || "[]")
+        existingHistory.unshift(historyItem)
+        localStorage.setItem("detectionHistory", JSON.stringify(existingHistory.slice(0, 50)))
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        
+        // Check if error is due to abort/timeout
+        if (fetchErr instanceof Error && fetchErr.name === "AbortError") {
+          throw new Error("Connection timeout. The backend server is not responding. Please check your network connection and try again.")
+        }
+        
+        throw fetchErr
       }
-
-      const existingHistory = JSON.parse(localStorage.getItem("detectionHistory") || "[]")
-      existingHistory.unshift(historyItem)
-      localStorage.setItem("detectionHistory", JSON.stringify(existingHistory.slice(0, 50)))
     } catch (err) {
       console.error("Prediction error:", err)
+      setConnectionStatus("disconnected")
       setError(
         err instanceof Error
           ? err.message
-          :"Failed to connect to the deployed backend server.",
+          : "Failed to connect to the backend server. Please ensure the backend is running and try again.",
       )
     } finally {
       setIsLoading(false)
@@ -121,15 +132,19 @@ setResult(data)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
-      const response = await fetch("https://green-diagnosis.onrender.com/health",
-   {
-        method: "GET",
-        mode: "cors",
-        signal: controller.signal,
-      })
+      try {
+        const response = await fetch("https://green-diagnosis.onrender.com/health", {
+          method: "GET",
+          mode: "cors",
+          signal: controller.signal,
+        })
 
-      clearTimeout(timeoutId)
-      setConnectionStatus(response.ok ? "connected" : "disconnected")
+        clearTimeout(timeoutId)
+        setConnectionStatus(response.ok ? "connected" : "disconnected")
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        throw fetchErr
+      }
     } catch (err) {
       console.log("Connection test failed:", err)
       setConnectionStatus("disconnected")
